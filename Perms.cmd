@@ -1,18 +1,11 @@
 @echo off
 
-:: Script Metadata
-set "SCRIPT_NAME=GSecurity"
-set "SCRIPT_VERSION=3.7.0"
-set "SCRIPT_UPDATED=10.06.2025"
-set "AUTHOR=Gorstak"
-Title GSecurity && Color 0b
-
 :: Elevate
 >nul 2>&1 fsutil dirty query %systemdrive% || echo CreateObject^("Shell.Application"^).ShellExecute "%~0", "ELEVATED", "", "runas", 1 > "%temp%\uac.vbs" && "%temp%\uac.vbs" && exit /b
 DEL /F /Q "%temp%\uac.vbs"
 
 :: Step 1: Initialize environment
-setlocal EnableExtensions DisableDelayedExpansion
+setlocal EnableExtensions EnableDelayedExpansion
 
 :: Step 2: Move to the script directory
 cd /d %~dp0
