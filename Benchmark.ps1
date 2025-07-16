@@ -114,7 +114,7 @@ function Test-CPU {
             return "Error"
         }
         $cpuScore = 1 / $totalTime
-        $cpuScore = [math]::Round($cpuScore * 1000, 2)
+        $cpuScore = [math]::Round($cpuScore * 1500, 2)
         return $cpuScore
     } catch {
         return "Error"
@@ -177,7 +177,7 @@ function Test-Disk {
         }
 
         $diskScore = 1 / ($writeTime.TotalSeconds + $readTime.TotalSeconds)
-        $diskScore = [math]::Round($diskScore * 10, 2)
+        $diskScore = [math]::Round($diskScore * 40, 2)
         return $diskScore
     } catch {
         return "Disk Error"
