@@ -3,7 +3,8 @@ takeown /f %windir%\System32\Oobe\useroobe.dll /A
 icacls %windir%\System32\Oobe\useroobe.dll /inheritance:r
 icacls "%systemdrive%\Users" /remove "Everyone"
 icacls "C:\Users\Public" /reset /T
-icacls "%USERPROFILE%\Desktop" /reset /T
-icacls "%USERPROFILE%\Desktop" /setowner "%username%" /t /c /l
+takeown /f "%USERPROFILE%\Desktop" /r /d y
+icacls "%USERPROFILE%\Desktop" /inheritance:r
+icacls "%USERPROFILE%\Desktop" /grant:r %username%:(OI)(CI)F /t /l /q /c
 icacls "%USERPROFILE%\Desktop" /remove "System" /t /c /l
 icacls "%USERPROFILE%\Desktop" /remove "Administrators" /t /c /l
