@@ -3,7 +3,7 @@
 # Define paths and parameters
 $taskName = "SimpleAntivirusStartup"
 $taskDescription = "Runs the Simple Antivirus script at user logon with admin privileges."
-$scriptDir = "C:\Windows\Setup\Scripts\Bin"
+$scriptDir = "C:\Windows\Setup\Scripts"
 $scriptPath = "$scriptDir\Antivirus.ps1"
 $quarantineFolder = "C:\Quarantine"
 $logFile = "$quarantineFolder\antivirus_log.txt"
