@@ -76,10 +76,11 @@ function Update-Log {
 function Take-Screenie {
     try {
         Start-Sleep -Milliseconds 500
-        $bounds = $form.Bounds
-        $bmp = New-Object Drawing.Bitmap($bounds.Width, $bounds.Height)
+        # Capture the entire screen, not just the form
+        $screenBounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+        $bmp = New-Object Drawing.Bitmap($screenBounds.Width, $screenBounds.Height)
         $gfx = [Drawing.Graphics]::FromImage($bmp)
-        $gfx.CopyFromScreen($form.Location, [Drawing.Point]::Empty, $bounds.Size)
+        $gfx.CopyFromScreen($screenBounds.Location, [Drawing.Point]::Empty, $screenBounds.Size)
 
         $path = "$env:USERPROFILE\Pictures\BenchmarkResult_$((Get-Date).ToString('yyyyMMdd_HHmmss')).png"
         $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
@@ -91,6 +92,7 @@ function Take-Screenie {
         [System.Windows.Forms.MessageBox]::Show("Failed to take screenshot: $_")
     }
 }
+
 
 # CPU Benchmark
 function Test-CPU {
@@ -145,8 +147,8 @@ function Test-Memory {
 
         $memoryWriteScore = 1 / $writeTime.TotalSeconds
         $memoryReadScore = 1 / $readTime.TotalSeconds
-        $memoryWriteScore = [math]::Round($memoryWriteScore * 100, 2)
-        $memoryReadScore = [math]::Round($memoryReadScore * 100, 2)
+        $memoryWriteScore = [math]::Round($memoryWriteScore * 200, 2)
+        $memoryReadScore = [math]::Round($memoryReadScore * 200, 2)
         return $memoryWriteScore, $memoryReadScore
     } catch {
         return "Error", "Error"
