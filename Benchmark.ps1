@@ -115,7 +115,7 @@ function Test-CPU {
             return "Error"
         }
         $cpuScore = 1 / $totalTime
-        $cpuScore = [math]::Round($cpuScore * 1000, 2)
+        $cpuScore = [math]::Round($cpuScore * 500, 2)
         return $cpuScore
     } catch {
         return "Error"
@@ -145,8 +145,8 @@ function Test-Memory {
 
         $memoryWriteScore = 1 / $writeTime.TotalSeconds
         $memoryReadScore = 1 / $readTime.TotalSeconds
-        $memoryWriteScore = [math]::Round($memoryWriteScore * 500, 2)
-        $memoryReadScore = [math]::Round($memoryReadScore * 500, 2)
+        $memoryWriteScore = [math]::Round($memoryWriteScore * 100, 2)
+        $memoryReadScore = [math]::Round($memoryReadScore * 100, 2)
         return $memoryWriteScore, $memoryReadScore
     } catch {
         return "Error", "Error"
@@ -197,7 +197,7 @@ function Test-Graphics {
         $renderTime = (Get-Date) - $start
 
         $graphicsScore = 1 / $renderTime.TotalSeconds
-        $graphicsScore = [math]::Round($graphicsScore * 1000, 2)
+        $graphicsScore = [math]::Round($graphicsScore * 500, 2)
         return $graphicsScore
     } catch {
         return "Error"
