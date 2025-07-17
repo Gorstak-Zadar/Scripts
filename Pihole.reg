@@ -1,6 +1,6 @@
 Windows Registry Editor Version 5.00
 
-; Enable DoH
+; Disable DoH so that policy below can work
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters]
 "DoHPolicy"=dword:00000000
