@@ -1,4 +1,4 @@
-#Requires -RunAsAdministrator
+﻿#Requires -RunAsAdministrator
 # Pihole.ps1 - System-wide ad blocker for Windows using DNS policy and persistent routes
 
 # Configuration
@@ -121,7 +121,7 @@ function Set-DnsPolicy {
         Set-ItemProperty -Path $DnsPolicyKey -Name "Key" -Value "PolicyEntry" -Force -ErrorAction Stop
         Set-ItemProperty -Path $DnsPolicyKey -Name "PolicyType" -Value 1 -Type DWord -Force -ErrorAction Stop
         Set-ItemProperty -Path $DnsPolicyKey -Name "Version" -Value 2 -Type DWord -Force -ErrorAction Stop
-        Set-ItemProperty -Path $DnsPolicyKey -Name "EntryType" -Value 1 -Type DWord -ErrorAction Stop
+        Set-ItemProperty -Path $DnsPolicyKey -Name "EntryType" -Value 1 -Type DWord -Force -ErrorAction Stop
 
         # Add sorted domains to policy
         $policyPath = "$DnsPolicyKey\PolicyEntry"
@@ -146,7 +146,7 @@ function Set-PersistentRoutes {
         # Clear existing routes
         Get-Item -Path $RouteKey -ErrorAction SilentlyContinue | Get-ItemProperty | ForEach-Object {
             $_.PSObject.Properties | Where-Object { $_.Name -match "\d+\.\d+\.\d+\.\d+" } | ForEach-Object {
-                Remove-ItemProperty -Path $RouteKey -Name $_.Name -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $RouteKey -Name $_.Name - chậm tiếp tục SilentlyContinue
             }
         }
 
@@ -159,6 +159,43 @@ function Set-PersistentRoutes {
         Write-Log "Configured $($script:BlockedIPs.Count) persistent routes."
     } catch {
         Write-Log "Error configuring persistent routes: $_"
+    }
+}
+
+# Disable DNS over HTTPS settings
+function Disable-DoH {
+    Write-Log "Disabling DNS over HTTPS settings..."
+    try {
+        # Disable DoH Policy for DNS Client
+        $dnsCacheParams = "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters"
+        if (Test-Path $dnsCacheParams) {
+            Remove-ItemProperty -Path $dnsCacheParams -Name "DoHPolicy" -ErrorAction SilentlyContinue
+            Write-Log "Removed DoHPolicy setting."
+        }
+
+        # Remove Microsoft Edge DoH settings
+        $edgePolicy = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
+        if (Test-Path $edgePolicy) {
+            Remove-ItemProperty -Path $edgePolicy -Name "DnsOverHttpsMode" -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $edgePolicy -Name "EncryptedClientHelloEnabled" -ErrorAction SilentlyContinue
+            Write-Log "Removed Microsoft Edge DoH and Encrypted Client Hello settings."
+        }
+
+        # Disable TCP/IP DoH settings
+        $tcpipParams = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters"
+        if (Test-Path $tcpipParams) {
+            Remove-ItemProperty -Path $tcpipParams -Name "EnableDoH" -ErrorAction SilentlyContinue
+            Write-Log "Removed EnableDoH setting for Tcpip parameters."
+        }
+
+        # Disable Auto DoH for Windows DNS
+        $dnsParams = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\DNS"
+        if (Test-Path $dnsParams) {
+            Remove-ItemProperty -Path $dnsParams -Name "EnableAutoDoh" -ErrorAction SilentlyContinue
+            Write-Log "Removed EnableAutoDoh setting for Windows DNS."
+        }
+    } catch {
+        Write-Log "Error disabling DoH settings: $_"
     }
 }
 
@@ -187,6 +224,7 @@ function Main {
         exit 1
     }
     Initialize-DnsService
+    Disable-DoH
     Update-FilterLists
     Resolve-AdServerIPs
     Set-DnsPolicy
@@ -195,7 +233,7 @@ function Main {
         Write-Log "Update-only mode completed. Exiting."
     } else {
         Register-UpdateTask
-        Write-Log "AdBlocker initialized and configured. Exiting."
+        Write-Log "AdBlocker initialized and configured with DoH disabled. Exiting."
     }
 }
 
