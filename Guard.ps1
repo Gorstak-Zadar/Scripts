@@ -1,3 +1,8 @@
+# PowerShell script to run as a background job to monitor and apply firewall rules
+# Applies rules from the pasted registry content and monitors for firewall rule changes
+
+# Section to paste registry keys to apply and monitor
+$registryContent = @"
 Windows Registry Editor Version 5.00
 
 ; Firewall
@@ -478,3 +483,46 @@ Windows Registry Editor Version 5.00
 "{C0F22E3E-A006-4992-88D8-78F290D13114}"="v2.33|Action=Block|Active=TRUE|Dir=In|Protocol=17|App=C:\\Program Files\\WindowsApps\\TheBrowserCompany.Arc_1.63.0.205_x64__ttt1ap7aakyb4\\Arc.exe|Name=Arc|Desc=Arc|EmbedCtxt={78E1CD88-49E3-476E-B926-580E596AD309}|"
 "TheBrowserCompany.Arc_ttt1ap7aakyb4-Out-Allow-AllCapabilities"="v2.33|Action=Allow|Active=FALSE|Dir=Out|Profile=Domain|Profile=Private|Profile=Public|Name=Arc|Desc=Arc|PFN=TheBrowserCompany.Arc_ttt1ap7aakyb4|LUOwn=S-1-5-21-728396961-3906097997-3349621496-1000|EmbedCtxt=Arc|"
 "{BA43993A-56F1-4DDF-9AFA-DFF8744AE413}"="v2.33|Action=Block|Active=TRUE|Dir=In|Protocol=17|LPort=5353|App=C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe|Name=Google Chrome (mDNS-In)|Desc=Inbound rule for Google Chrome to allow mDNS traffic.|EmbedCtxt=Google Chrome|"
+"@
+# Function to apply firewall rules from registry content
+function Apply-FirewallRules {
+    # Write the registry content to a temporary file
+    $tempRegFile = [System.IO.Path]::GetTempFileName() + ".reg"
+    $script:registryContent | Out-File -FilePath $tempRegFile -Encoding Unicode
+
+    # Import the registry file to apply the firewall rules
+    try {
+        reg import $tempRegFile 2>&1 | Out-Null
+        Write-Host "Firewall rules applied from registry content at $(Get-Date)."
+    } catch {
+        Write-Host "Error applying firewall rules: $_"
+    }
+
+    # Clean up the temporary file
+    Remove-Item $tempRegFile -Force -ErrorAction SilentlyContinue
+}
+
+# Function to monitor firewall rule changes
+function Start-FirewallMonitor {
+    Write-Host "Starting firewall rule monitoring..."
+
+    # Register WMI event for firewall rule changes
+    $query = "SELECT * FROM __InstanceModificationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_NTLogEvent' AND TargetInstance.EventCode = 4947"
+    Register-WmiEvent -Query $query -SourceIdentifier "FirewallRuleChange" -Action {
+        Write-Host "Detected firewall rule change at $(Get-Date)"
+        Apply-FirewallRules
+    }
+
+    Write-Host "Firewall monitoring started. Running in background..."
+}
+
+# Main script
+# Start the firewall monitoring and rule application as a background job
+Start-Job -ScriptBlock {
+    . $MyInvocation.MyCommand.Path # Reload the script to access functions
+    Apply-FirewallRules
+    Start-FirewallMonitor
+}
+
+Write-Host "Firewall script started as a background job at $(Get-Date)."
+
